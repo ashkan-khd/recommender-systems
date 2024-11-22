@@ -7,7 +7,8 @@ from tqdm import tqdm
 
 from prototypes.diversity.project.aggregators import hybrid_score
 from prototypes.diversity.project.group_preference_lists import GroupPreferenceLists
-from prototypes.diversity.project.group_recommendation import GroupRecommendationAnalyzer
+from prototypes.diversity.project.group_recommendation import GroupRecommendationAnalyzer, \
+    GroupRecommendationsOverallAnalyzer
 from prototypes.diversity.project.preference_score import PreferenceScoreRepository
 from prototypes.diversity.project.custom_types import *
 
@@ -83,9 +84,11 @@ def generate_sequential_recommendations(
         k: int,
         alpha: float = .0,
 ):
+    group_recommendation_overall_analyzer = GroupRecommendationsOverallAnalyzer(group)
     base_user_movie_matrix = transform_csv_dataframe_to_user_movies_matrix(base_df)
     group_recommendation_analyzer = update_one_round(0, group, base_user_movie_matrix, k, alpha)
-    report_group_recommendation(0, group_recommendation_analyzer, alpha)
+    group_recommendation_overall_analyzer.add_group_recommendation(group_recommendation_analyzer)
+    report_group_recommendation(0, group_recommendation_overall_analyzer, alpha)
 
     alpha = group_recommendation_analyzer.get_group_disagreement()
 
@@ -94,9 +97,11 @@ def generate_sequential_recommendations(
     for chunk in chunk_dfs:
         current_df = pd.concat([current_df, chunk], ignore_index=True)
         current_user_movie_matrix = transform_csv_dataframe_to_user_movies_matrix(current_df)
-        group_recommendation_analyzer = update_one_round((round_ := round_ + 1), group, current_user_movie_matrix, k,
-                                                         alpha)
-        report_group_recommendation(round_, group_recommendation_analyzer, alpha)
+        group_recommendation_analyzer = update_one_round(
+            (round_ := round_ + 1), group, current_user_movie_matrix, k, alpha
+        )
+        group_recommendation_overall_analyzer.add_group_recommendation(group_recommendation_analyzer)
+        report_group_recommendation(round_, group_recommendation_overall_analyzer, alpha)
 
         alpha = group_recommendation_analyzer.get_group_disagreement()
 
@@ -104,8 +109,11 @@ def generate_sequential_recommendations(
 
 
 def report_group_recommendation(
-        iteration: int, group_recommendation_analyzer: GroupRecommendationAnalyzer, alpha: float
+        iteration: int,
+        group_recommendation_overall_analyzer: GroupRecommendationsOverallAnalyzer,
+        alpha: float,
 ):
+    group_recommendation_analyzer = group_recommendation_overall_analyzer.get_last_group_recommendation()
     printer = Printer()
     printer(f"++--- Round {iteration} ---++")
     printer(f"Group satisfaction: {group_recommendation_analyzer.get_group_satisfaction()}")
@@ -116,6 +124,13 @@ def report_group_recommendation(
         printer(
             f"\tUser {user_id} satisfaction: "
             f"{group_recommendation_analyzer.get_user_group_recommendation_satisfaction(user_id)}"
+        )
+
+    printer("Group overall satisfaction:", group_recommendation_overall_analyzer.get_group_satisfaction())
+    for user_id in group_recommendation_analyzer.group:
+        printer(
+            f"\tUser {user_id} overall satisfaction: "
+            f"{group_recommendation_overall_analyzer.get_user_group_recommendation_satisfaction(user_id)}"
         )
     printer("++-----------------++")
 

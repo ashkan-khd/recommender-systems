@@ -72,3 +72,6 @@ class GroupRecommendationsOverallAnalyzer:
             self.get_user_group_recommendation_satisfaction(user_id)
             for user_id in self.group
         ) / len(self.group)
+
+    def get_last_group_recommendation(self) -> GroupRecommendationAnalyzer:
+        return self.group_recommendation_analyzers[-1]
