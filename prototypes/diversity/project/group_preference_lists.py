@@ -3,7 +3,7 @@ from typing import *
 
 from pandas import DataFrame
 
-from prototypes.diversity.project.custom_types import *
+from prototypes.diversity.project.constants import *
 
 
 @dataclass
@@ -47,7 +47,10 @@ class GroupPreferenceLists:
             ].dropna(axis=1, how='all')
         movies = []
         satisfaction = 0
-        n_preferences = user_1_ratings_df.iloc[0].nlargest(self.n).items()
+        try:
+            n_preferences = user_1_ratings_df.iloc[0].nlargest(self.n).items()
+        except IndexError as e:
+            raise ValueError(f"User {user_id} has no preferences") from e
         for i, (movie, rating) in enumerate(n_preferences):
             movies.append(movie)
             if i < self.top_n:

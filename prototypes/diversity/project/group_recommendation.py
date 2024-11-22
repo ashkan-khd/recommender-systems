@@ -1,8 +1,9 @@
 from functools import lru_cache
 from typing import List
 
+from prototypes.diversity.project.diversity import DiversityScoreCalculator
 from prototypes.diversity.project.preference_score.calculator import CalculatePreferenceScore
-from prototypes.diversity.project.custom_types import *
+from prototypes.diversity.project.constants import *
 
 from prototypes.diversity.project.group_preference_lists import GroupPreferenceLists
 
@@ -36,9 +37,12 @@ class GroupRecommendationAnalyzer:
 
     @lru_cache(maxsize=None)
     def get_user_group_recommendation_satisfaction(self, user_id: UserIDType):
-        return self.__get_user_group_list_satisfaction(
-            user_id
-        ) / self.group_preference_lists.get_user_list_satisfaction(user_id)
+        return min(
+            self.__get_user_group_list_satisfaction(
+                user_id
+            ) / self.group_preference_lists.get_user_list_satisfaction(user_id),
+            1.
+        )
 
     def get_group_satisfaction(self):
         return sum(
@@ -49,6 +53,10 @@ class GroupRecommendationAnalyzer:
     def get_group_disagreement(self):
         scores = [self.get_user_group_recommendation_satisfaction(user_id) for user_id in self.group]
         return max(scores) - min(scores)
+
+    def get_group_diversity(self):
+        diversity_score_calculator = DiversityScoreCalculator()
+        return diversity_score_calculator.calculate_list_diversity(self.group_recommendation)
 
 
 class GroupRecommendationsOverallAnalyzer:
@@ -75,3 +83,14 @@ class GroupRecommendationsOverallAnalyzer:
 
     def get_last_group_recommendation(self) -> GroupRecommendationAnalyzer:
         return self.group_recommendation_analyzers[-1]
+
+    def get_diversity_between_last_two_group_recommendations(self):
+        assert len(self.group_recommendation_analyzers) >= 2
+        last_group_recommendation = self.group_recommendation_analyzers[-1]
+        previous_group_recommendation = self.group_recommendation_analyzers[-2]
+        return DiversityScoreCalculator().calculate_diversity_between_two_lists(
+            last_group_recommendation.group_recommendation, previous_group_recommendation.group_recommendation
+        )
+
+    def __len__(self):
+        return len(self.group_recommendation_analyzers)

@@ -4,7 +4,7 @@ from typing import Optional
 from pandas import DataFrame
 
 from part2_utils.predict_user_rating import predict_user_rating
-from prototypes.diversity.project.custom_types import *
+from prototypes.diversity.project.constants import *
 
 
 class CalculatePreferenceScoreRepositoryInterface(ABC):

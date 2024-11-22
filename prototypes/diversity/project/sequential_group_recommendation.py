@@ -10,7 +10,7 @@ from prototypes.diversity.project.group_preference_lists import GroupPreferenceL
 from prototypes.diversity.project.group_recommendation import GroupRecommendationAnalyzer, \
     GroupRecommendationsOverallAnalyzer
 from prototypes.diversity.project.preference_score import PreferenceScoreRepository
-from prototypes.diversity.project.custom_types import *
+from prototypes.diversity.project.constants import *
 
 
 class Printer:

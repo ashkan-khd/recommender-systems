@@ -3,7 +3,7 @@ from typing import Dict, Tuple, Optional
 from pandas import DataFrame
 
 from .calculator import CalculatePreferenceScoreRepositoryInterface, CalculatePreferenceScore
-from prototypes.diversity.project.custom_types import *
+from prototypes.diversity.project.constants import *
 
 
 class PreferenceScoreRepository:
