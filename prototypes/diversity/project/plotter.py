@@ -84,7 +84,7 @@ class Plotter:
         plt.grid(True)
         plt.show()
 
-    def plot_usres_overall_satisfaction(self):
+    def plot_users_overall_satisfaction(self):
         plt.figure(figsize=(10, 6))
         for user_id, data in self.__data['users'].items():
             plt.plot(self.__years, data['overall_satisfaction'], marker='o', label=f'User {user_id}')
@@ -121,6 +121,6 @@ class Plotter:
         self.plot_group_disagreement()
         self.plot_group_diversity()
         self.plot_users_satisfaction()
-        self.plot_usres_overall_satisfaction()
+        self.plot_users_overall_satisfaction()
         self.plot_group_overall_satisfaction()
         self.plot_diversity_from_last_recommendation()

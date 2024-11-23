@@ -76,7 +76,8 @@ def limit_neighborhood(
         user_id: int,
         threshold: Optional[float] = None,
 ) -> DataFrame:
-    neighbors = cf_matrix_with_similarity.copy()
+    neighbors = cf_matrix_with_similarity.copy().dropna(subset=['similarity'])
+
 
     if threshold is not None:
         neighbors = neighbors[neighbors['similarity'] >= threshold]
