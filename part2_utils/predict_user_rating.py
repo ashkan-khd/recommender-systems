@@ -1,4 +1,5 @@
 import typing
+import warnings
 from typing import *
 
 import numpy as np
@@ -78,7 +79,6 @@ def limit_neighborhood(
 ) -> DataFrame:
     neighbors = cf_matrix_with_similarity.copy().dropna(subset=['similarity'])
 
-
     if threshold is not None:
         neighbors = neighbors[neighbors['similarity'] >= threshold]
 
@@ -109,7 +109,13 @@ def predict_score(cf_matrix_with_similarity: DataFrame, movie_id: int, user_id: 
 
     sum_of_similarities = neighbors_ratings['similarity'].sum()
 
-    predicted_score = target_user_avg_rating + (weighted_sum / sum_of_similarities)
+    # Your code that generates a warning
+    try:
+        with warnings.catch_warnings():
+            warnings.filterwarnings('error')
+            predicted_score = target_user_avg_rating + (weighted_sum / sum_of_similarities)
+    except Warning as e:
+        raise ValueError("Predicted score is not a number") from e
 
     return predicted_score
 
@@ -117,7 +123,8 @@ def predict_score(cf_matrix_with_similarity: DataFrame, movie_id: int, user_id: 
 def predict_user_rating(
         transformed_df,
         user_id: int,
-        movie_id: int
+        movie_id: int,
+        use_average_method: bool = True,
 ) -> float:
     try:
         limited_df = prepare_user_movie_matrix_for_cf_matrix(
@@ -125,6 +132,12 @@ def predict_user_rating(
         )
     except ValueError:
         return transformed_df[transformed_df['userId'] == user_id][movie_id].iloc[0]
+
+    if len(limited_df) < 3:
+        if use_average_method:
+            return limited_df.drop(['userId'], axis=1).mean(axis=1).iloc[0]
+        return np.nan
+
     limited_df_with_similarity = add_similarity_column_to_cf_matrix(
         limited_df, movie_id, user_id, pearson_similarity
     )
@@ -136,10 +149,18 @@ def predict_user_rating(
             threshold=None,
         )
     except ValueError:
-        return limited_df_with_similarity.drop(['userId', 'similarity'], axis=1).mean(axis=1).iloc[0]
-    predicted_score = predict_score(
-        neighbors_df,
-        movie_id,
-        user_id,
-    )
+        if use_average_method:
+            return limited_df_with_similarity.drop(['userId', 'similarity'], axis=1).mean(axis=1).iloc[0]
+        return np.nan
+
+    try:
+        predicted_score = predict_score(
+            neighbors_df,
+            movie_id,
+            user_id,
+        )
+    except ValueError:
+        if use_average_method:
+            return limited_df_with_similarity.drop(['userId', 'similarity'], axis=1).mean(axis=1).iloc[0]
+        return np.nan
     return max(0.0, min(5.0, predicted_score))
