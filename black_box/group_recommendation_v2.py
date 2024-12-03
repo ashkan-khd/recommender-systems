@@ -54,3 +54,25 @@ def get_group_recommendation(
 
     top_k_movies: List[MovieIDType] = heapq.nlargest(k, movies_score, key=movies_score.get)
     return top_k_movies
+
+
+def get_group_recommendation_v2(
+        group: List[UserIDType],
+        movie_to_tags: Dict[MovieIDType, Set[str]],
+        user_movie_dict: Dict[UserIDType, Dict[MovieIDType, float]],
+        movie_search_area: List[MovieIDType],
+        k: int,
+) -> List[MovieIDType]:
+    group_top_movies = []
+    for user in group:
+        top_2k_preferences = heapq.nlargest(2 * k, user_movie_dict[user].items(), key=lambda x: x[1])
+        group_top_movies.extend([movie for movie, rating in top_2k_preferences])
+
+    # group_top_movies = [movie for user in group for movie, rating in user_movie_dict[user].items()]
+
+    movies_score: Dict[MovieIDType, int] = {}
+    for movie in movie_search_area:
+        movies_score[movie] = score_movie(movie, group_top_movies, movie_to_tags)
+
+    top_k_movies: List[MovieIDType] = heapq.nlargest(k, movies_score, key=movies_score.get)
+    return top_k_movies

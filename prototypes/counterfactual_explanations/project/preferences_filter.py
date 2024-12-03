@@ -17,7 +17,7 @@ class MoviePreferencesFilterInterface:
 
 class MoveGlobalPopularityFilter(MoviePreferencesFilterInterface):
 
-    def __init__(self, user_movie_matrix: DataFrame, percentile_threshold: float = 0.5):
+    def __init__(self, user_movie_matrix: DataFrame, percentile_threshold: float = 0.3):
         self.user_movie_matrix = user_movie_matrix
         self.percentile_threshold = percentile_threshold
 
